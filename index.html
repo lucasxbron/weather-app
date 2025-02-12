@@ -8,8 +8,21 @@
   </head>
   <body>
     <div id="app">
-      <h1 class="text-3xl font-bold underline text-red-500">Hello world!</h1>
-    </div>
+      <h1 class="text-3xl font-bold text-red-500">Weather App</h1>
+      <form class="flex justify-center items-center">
+        <input
+          id="city"
+          name="city"
+          type="text"
+          class="border border-gray-300 p-2 rounded-lg"
+          placeholder="Enter city name"
+        />
+        <input type="submit"
+          value="Search City"
+          class="bg-blue-500 text-white p-2 rounded-lg ml-2"
+        >
+        </input>
+    </form>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
