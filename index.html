@@ -7,15 +7,17 @@
     <title>Weather app</title>
   </head>
   <body>
-    <div id="app">
+    <div id="app" class="p-4">
       <h1 class="text-3xl font-bold text-red-500">Weather App</h1>
-      <form class="flex justify-center items-center">
+      <form class="flex justify-center items-center mt-5">
         <input
           id="city"
           name="city"
           type="text"
           class="border border-gray-300 p-2 rounded-lg"
           placeholder="Enter city name"
+          maxlength="100"
+          minlength="2"
         />
         <input type="submit"
           value="Search City"
