@@ -2,12 +2,20 @@ import "./style.css";
 
 const formEl = document.querySelector("form");
 
-function searchCityWeather(event: Event) {
+async function searchCityWeather(event: Event) {
   event.preventDefault();
   const city = getCity(event);
   const sanititedCity = sanitizeCity(city);
   const isValidCity = isCityValid(sanititedCity);
-  displayCityValidationStatus(isValidCity);
+  //   displayCityValidationStatus(isValidCity);
+
+  if (isValidCity) {
+    const coordinates = await getLatLonByCity(sanititedCity);
+    if (coordinates) {
+      const { lat, lon } = coordinates;
+      await getWeatherData(lat, lon);
+    }
+  }
 }
 
 formEl?.addEventListener("submit", searchCityWeather);
@@ -17,18 +25,18 @@ formEl?.addEventListener("submit", searchCityWeather);
  *
  * @param isValidCity - A boolean indicating whether the city is valid (true) or invalid (false).
  */
-function displayCityValidationStatus(isValidCity: boolean) {
-  const spanEl = document.querySelector("span");
-  if (!isValidCity) {
-    spanEl!.textContent = "Invalid";
-    spanEl!.classList.add("text-red-500");
-  } else {
-    spanEl!.textContent = "Valid";
-    spanEl!.classList.add("text-green-500");
-  }
+// function displayCityValidationStatus(isValidCity: boolean) {
+//   const spanEl = document.querySelector("span");
+//   if (!isValidCity) {
+//     spanEl!.textContent = "Invalid";
+//     spanEl!.classList.add("text-red-500");
+//   } else {
+//     spanEl!.textContent = "Valid";
+//     spanEl!.classList.add("text-green-500");
+//   }
 
-  spanEl!.classList.remove("hidden");
-}
+//   spanEl!.classList.remove("hidden");
+// }
 
 /**
  * Extracts the city value from a form submission event.
@@ -68,18 +76,33 @@ function isCityValid(cityValueSanitized: string): boolean {
   return isCityValid;
 }
 
-
-async function getWeatherData(){
-  const apiKey = "71ef9b2bf0064a20c46c5ee2f838b154"; 
-  const lat = "52.520008";
-  const lon = "13.404954";
-  const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`
+async function getLatLonByCity(city: string) {
+  const apiKey = "71ef9b2bf0064a20c46c5ee2f838b154";
+  const url = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`;
   try {
     const response = await fetch(url);
-    console.log(":rocket: ~ getWeatherByCity ~ response:", response)
     if (!response.ok) throw new Error("City not found");
     const data = await response.json();
-    console.log(data); 
+    if (data.length === 0) throw new Error("City not found");
+    const { lat, lon } = data[0];
+    return { lat, lon };
+  } catch (error: any) {
+    console.error(error.message);
+    return null;
+  }
+}
+
+const weatherEl = document.getElementById("weather");
+
+async function getWeatherData(lat: string, lon: string) {
+  const apiKey = "71ef9b2bf0064a20c46c5ee2f838b154";
+  const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("City not found");
+    const data = await response.json();
+    console.log(data);
+    displayWeatherData(data);
     return data;
   } catch (error: any) {
     console.error(error.message);
@@ -87,4 +110,20 @@ async function getWeatherData(){
   }
 }
 
-getWeatherData();
+function displayWeatherData(weatherData: any) {
+  if (!weatherEl) return;
+
+  const cityName = weatherData.city.name;
+  const todayWeather = weatherData.list[0];
+
+  const tempCelsius = todayWeather.main.temp - 273.15;
+weatherEl.innerHTML = `
+    <div class="mt-6 shadow-md rounded-lg p-6 text-white bg-blue-500">
+        <h2 class="text-2xl font-bold mb-2">${cityName}</h2>
+        <p class="text-lg"><span class="inline-block w-8 text-center"><i class="fas fa-thermometer-half"></i></span> Temperature: ${tempCelsius.toFixed(2)}°C</p>
+        <p class="text-lg"><span class="inline-block w-8 text-center"><i class="fas fa-cloud"></i></span> Weather: ${todayWeather.weather[0].description}</p>
+        <p class="text-lg"><span class="inline-block w-8 text-center"><i class="fas fa-tint"></i></span> Humidity: ${todayWeather.main.humidity}%</p>
+        <p class="text-lg"><span class="inline-block w-8 text-center"><i class="fas fa-wind"></i></span> Wind Speed: ${todayWeather.wind.speed} m/s</p>
+    </div>
+`;
+}
