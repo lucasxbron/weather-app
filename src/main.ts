@@ -76,38 +76,50 @@ function isCityValid(cityValueSanitized: string): boolean {
   return isCityValid;
 }
 
-async function getLatLonByCity(city: string) {
-  const apiKey = "71ef9b2bf0064a20c46c5ee2f838b154";
-  const url = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("City not found");
-    const data = await response.json();
-    if (data.length === 0) throw new Error("City not found");
-    const { lat, lon } = data[0];
-    return { lat, lon };
-  } catch (error: any) {
-    console.error(error.message);
-    return null;
-  }
-}
-
 const weatherEl = document.getElementById("weather");
+
+async function getLatLonByCity(city: string) {
+    const apiKey = "71ef9b2bf0064a20c46c5ee2f838b154";
+    const url = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("City not found. Please try again later.");
+        const data = await response.json();
+        if (data.length === 0) throw new Error("City not found. Please try again later.");
+        const { lat, lon } = data[0];
+        return { lat, lon };
+    } catch (error: any) {
+        console.error(error.message);
+        displayError(error.message);
+        return null;
+    }
+}
 
 async function getWeatherData(lat: string, lon: string) {
   const apiKey = "71ef9b2bf0064a20c46c5ee2f838b154";
   const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`;
   try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("City not found");
-    const data = await response.json();
-    console.log(data);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Weather data not found. Please try again later.");
+      const data = await response.json();
+      console.log(data);
     displayWeatherData(data);
     return data;
-  } catch (error: any) {
+} catch (error: any) {
     console.error(error.message);
+    displayError(error.message);
     return null;
-  }
+}
+}
+
+function displayError(message: string) {
+    if (!weatherEl) return;
+    weatherEl.innerHTML = `
+        <div class="mt-6 rounded-lg p-6 text-black">
+                <h2 class="text-xl font-bold mb-2">Error</h2>
+                <p class="text-lg">${message}</p>
+        </div>
+    `;
 }
 
 function displayWeatherData(weatherData: any) {
@@ -117,13 +129,21 @@ function displayWeatherData(weatherData: any) {
   const todayWeather = weatherData.list[0];
 
   const tempCelsius = todayWeather.main.temp - 273.15;
-weatherEl.innerHTML = `
+  weatherEl.innerHTML = `
     <div class="mt-6 shadow-md rounded-lg p-6 text-white bg-blue-500">
         <h2 class="text-2xl font-bold mb-2">${cityName}</h2>
-        <p class="text-lg"><span class="inline-block w-8 text-center"><i class="fas fa-thermometer-half"></i></span> Temperature: ${tempCelsius.toFixed(2)}°C</p>
-        <p class="text-lg"><span class="inline-block w-8 text-center"><i class="fas fa-cloud"></i></span> Weather: ${todayWeather.weather[0].description}</p>
-        <p class="text-lg"><span class="inline-block w-8 text-center"><i class="fas fa-tint"></i></span> Humidity: ${todayWeather.main.humidity}%</p>
-        <p class="text-lg"><span class="inline-block w-8 text-center"><i class="fas fa-wind"></i></span> Wind Speed: ${todayWeather.wind.speed} m/s</p>
+        <p class="text-lg"><span class="inline-block w-8 text-center"><i class="fas fa-thermometer-half"></i></span> Temperature: ${tempCelsius.toFixed(
+          1
+        )}°C</p>
+        <p class="text-lg"><span class="inline-block w-8 text-center"><i class="fas fa-cloud"></i></span> Weather: ${
+          todayWeather.weather[0].description
+        }</p>
+        <p class="text-lg"><span class="inline-block w-8 text-center"><i class="fas fa-tint"></i></span> Humidity: ${
+          todayWeather.main.humidity
+        }%</p>
+        <p class="text-lg"><span class="inline-block w-8 text-center"><i class="fas fa-wind"></i></span> Wind Speed: ${
+          todayWeather.wind.speed
+        } m/s</p>
     </div>
 `;
 }
