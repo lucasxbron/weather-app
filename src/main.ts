@@ -67,3 +67,24 @@ function isCityValid(cityValueSanitized: string): boolean {
       : false;
   return isCityValid;
 }
+
+
+async function getWeatherData(){
+  const apiKey = "71ef9b2bf0064a20c46c5ee2f838b154"; 
+  const lat = "52.520008";
+  const lon = "13.404954";
+  const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`
+  try {
+    const response = await fetch(url);
+    console.log(":rocket: ~ getWeatherByCity ~ response:", response)
+    if (!response.ok) throw new Error("City not found");
+    const data = await response.json();
+    console.log(data); 
+    return data;
+  } catch (error: any) {
+    console.error(error.message);
+    return null;
+  }
+}
+
+getWeatherData();
