@@ -1,6 +1,7 @@
 import "./style.css";
 
 const formEl = document.querySelector("form");
+const weatherEl = document.getElementById("weather");
 
 async function searchCityWeather(event: Event) {
   event.preventDefault();
@@ -76,47 +77,47 @@ function isCityValid(cityValueSanitized: string): boolean {
   return isCityValid;
 }
 
-const weatherEl = document.getElementById("weather");
-
 async function getLatLonByCity(city: string) {
-    const apiKey = "71ef9b2bf0064a20c46c5ee2f838b154";
-    const url = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`;
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("City not found. Please try again later.");
-        const data = await response.json();
-        if (data.length === 0) throw new Error("City not found. Please try again later.");
-        const { lat, lon } = data[0];
-        return { lat, lon };
-    } catch (error: any) {
-        console.error(error.message);
-        displayError(error.message);
-        return null;
-    }
+  const apiKey = "71ef9b2bf0064a20c46c5ee2f838b154";
+  const url = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok)
+      throw new Error("City not found. Please try again later.");
+    const data = await response.json();
+    if (data.length === 0)
+      throw new Error("City not found. Please try again later.");
+    const { lat, lon } = data[0];
+    return { lat, lon };
+  } catch (error: any) {
+    console.error(error.message);
+    displayError(error.message);
+    return null;
+  }
 }
 
 async function getWeatherData(lat: string, lon: string) {
   const apiKey = "71ef9b2bf0064a20c46c5ee2f838b154";
   const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`;
   try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Weather data not found. Please try again later.");
-      const data = await response.json();
-      console.log(data);
+    const response = await fetch(url);
+    if (!response.ok)
+      throw new Error("Weather data not found. Please try again later.");
+    const data = await response.json();
+    console.log(data);
     displayWeatherData(data);
     return data;
-} catch (error: any) {
+  } catch (error: any) {
     console.error(error.message);
     displayError(error.message);
     return null;
-}
+  }
 }
 
 function displayError(message: string) {
-    if (!weatherEl) return;
-    weatherEl.innerHTML = `
+  if (!weatherEl) return;
+  weatherEl.innerHTML = `
         <div class="mt-6 rounded-lg p-6 text-black">
-                <h2 class="text-xl font-bold mb-2">Error</h2>
                 <p class="text-lg">${message}</p>
         </div>
     `;
