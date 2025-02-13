@@ -1,32 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Weather app</title>
-  </head>
-  <body>
-    <div id="app" class="p-4">
-      <h1 class="text-3xl font-bold text-red-500">Weather App</h1>
-      <form class="flex justify-center items-center mt-5">
-        <input
-          id="city"
-          name="city"
-          type="text"
-          class="border border-gray-300 p-2 rounded-lg"
-          placeholder="Enter city name"
-          maxlength="100"
-          minlength="2"
-        />
-        <br>
-        <span class="hidden"></span>
-        <input type="submit"
-          value="Search City"
-          class="bg-blue-500 text-white p-2 rounded-lg ml-2"
-        >
-        </input>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <title>Weather app</title>
+</head>
+
+<body class="bg-gray-200">
+  <div id="app" class="mt-6 p-4 max-w-lg mx-auto bg-white shadow-lg rounded-lg">
+    <h1 class="text-3xl font-bold text-blue-600 text-center mb-4">Simple Weather App</h1>
+    <form class="flex flex-col justify-center items-center mt-5 space-y-4">
+      <input id="city" name="city" type="text" class="border border-gray-300 p-3 rounded-lg w-full"
+        placeholder="Enter city name" maxlength="100" minlength="2" />
+      <span class="hidden text-sm"></span>
+      <input type="submit" value="Search City" class="bg-blue-500 hover:bg-blue-700 text-white p-3 rounded-lg w-full cursor-pointer">
     </form>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+    <div id="weather"></div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
 </html>
