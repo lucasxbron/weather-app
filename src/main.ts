@@ -6,15 +6,13 @@ const apiKey = import.meta.env.VITE_OPEN_WEATHER_API_KEY;
 
 /**
  * Handles the search for a city's weather information.
- * 
+ *
  * This function is triggered by an event, typically a form submission. It prevents the default
  * form submission behavior, retrieves and sanitizes the city name from the event, and validates
  * the city name. If the city name is valid, it checks for cached coordinates in local storage.
  * If cached coordinates are found, it uses them to fetch the weather data. If not, it fetches
  * the coordinates for the city, caches them, and then fetches the weather data.
- * 
- * @param {Event} event - The event object triggered by the form submission.
- * @returns {Promise<void>} A promise that resolves when the weather data has been fetched and processed.
+ *
  */
 
 async function searchCityWeather(event: Event) {
@@ -27,14 +25,14 @@ async function searchCityWeather(event: Event) {
   if (isValidCity) {
     const cachedCoordinates = localStorage.getItem(`cityCoordinates_${sanitizedCity}`);
     if (cachedCoordinates) {
-      const { lat, lon } = JSON.parse(cachedCoordinates);
-      await getWeatherData(lat, lon, sanitizedCity);
+      const { lat, lon, cityName } = JSON.parse(cachedCoordinates);
+      await getWeatherData(lat, lon, cityName);
     } else {
       const coordinates = await getLatLonByCity(sanitizedCity);
       if (coordinates) {
-        const { lat, lon } = coordinates;
-        localStorage.setItem(`cityCoordinates_${sanitizedCity}`, JSON.stringify(coordinates));
-        await getWeatherData(lat, lon, sanitizedCity);
+        const { lat, lon, cityName } = coordinates;
+        localStorage.setItem(`cityCoordinates_${cityName}`, JSON.stringify(coordinates));
+        await getWeatherData(lat, lon, cityName);
       }
     }
   }
@@ -103,31 +101,32 @@ async function getLatLonByCity(city: string) {
   const url = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`;
   try {
     const response = await fetch(url);
-    if (!response.ok)
-      throw new Error("City not found. Please try again later.");
+    if (!response.ok) throw new Error("City not found. Please try again.");
     const data = await response.json();
-    localStorage.setItem(`cityCoordinates_${city}`, JSON.stringify(data[0]));
-    if (data.length === 0)
-      throw new Error("City not found. Please try again later.");
+    if (data.length === 0) throw new Error("City not found. Please try again.");
     const { lat, lon } = data[0];
-    return { lat, lon };
+
+    // Reverse geocoding to get the correct city name
+    const reverseGeocodeUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`;
+    const reverseGeocodeResponse = await fetch(reverseGeocodeUrl);
+    if (!reverseGeocodeResponse.ok) throw new Error("Failed to get city name. Please try again later.");
+    const reverseGeocodeData = await reverseGeocodeResponse.json();
+    const correctCityName = reverseGeocodeData[0].name;
+    // console.log('correctCityName:',correctCityName);
+
+    localStorage.setItem(`cityCoordinates_${correctCityName}`, JSON.stringify({ lat, lon }));
+    return { lat, lon, cityName: correctCityName };
   } catch (error: any) {
     console.error(error.message);
     displayError(error.message);
     return null;
   }
 }
-
 /**
  * Fetches weather data for a given location (latitude, longitude, and city name) from the OpenWeatherMap API.
  * If the data is already cached and is less than 30 minutes old, it retrieves the data from local storage.
  * Otherwise, it fetches the data from the API, caches it, and then displays it.
  *
- * @param {string} lat - The latitude of the location.
- * @param {string} lon - The longitude of the location.
- * @param {string} city - The name of the city.
- * @returns {Promise<void>} A promise that resolves when the weather data is fetched and displayed.
- * @throws Will throw an error if the weather data cannot be fetched from the API.
  */
 
 async function getWeatherData(lat: string, lon: string, city: string) {
@@ -138,14 +137,15 @@ async function getWeatherData(lat: string, lon: string, city: string) {
     const cachedTime = localStorage.getItem(`weatherDataTime_${city}`);
 
     if (cachedWeather && cachedTime && now - parseInt(cachedTime) < 1800000) {
-      displayWeatherData(JSON.parse(cachedWeather));
+      displayWeatherData(JSON.parse(cachedWeather), city);
     } else {
       const response = await fetch(url);
       if (!response.ok) throw new Error("Weather data not found. Please try again later.");
       const data = await response.json();
+      console.log(data);
       localStorage.setItem(`weatherData_${city}`, JSON.stringify(data));
       localStorage.setItem(`weatherDataTime_${city}`, now.toString());
-      displayWeatherData(data);
+      displayWeatherData(data, city);
     }
   } catch (error: any) {
     console.error(error.message);
@@ -163,10 +163,10 @@ function displayError(message: string) {
     `;
 }
 
-function displayWeatherData(weatherData: any) {
+function displayWeatherData(weatherData: any, city: string) {
   if (!weatherEl) return;
 
-  const cityName = weatherData.city.name;
+  const cityName = city;
   const todayWeather = weatherData.list[0];
 
   const tempCelsius = todayWeather.main.temp - 273.15;
