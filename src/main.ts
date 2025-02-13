@@ -96,9 +96,11 @@ async function getLatLonByCity(city: string) {
   }
 }
 
+
 async function getWeatherData(lat: string, lon: string) {
   const apiKey = "71ef9b2bf0064a20c46c5ee2f838b154";
   const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+
   try {
     const response = await fetch(url);
     if (!response.ok)
