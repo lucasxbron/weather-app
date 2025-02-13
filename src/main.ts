@@ -22,19 +22,27 @@ async function searchCityWeather(event: Event) {
   const isValidCity = isCityValid(sanitizedCity);
   // displayCityValidationStatus(isValidCity);
 
-  if (isValidCity) {
-    const cachedCoordinates = localStorage.getItem(`cityCoordinates_${sanitizedCity}`);
-    if (cachedCoordinates) {
-      const { lat, lon, cityName } = JSON.parse(cachedCoordinates);
-      await getWeatherData(lat, lon, cityName);
-    } else {
-      const coordinates = await getLatLonByCity(sanitizedCity);
-      if (coordinates) {
-        const { lat, lon, cityName } = coordinates;
-        localStorage.setItem(`cityCoordinates_${cityName}`, JSON.stringify(coordinates));
-        await getWeatherData(lat, lon, cityName);
-      }
-    }
+  if (!isValidCity) {
+    // console.log("isValidCity:", isValidCity);
+    return;
+  }
+  const cachedCoordinates = localStorage.getItem(
+    `cityCoordinates_${sanitizedCity}`
+  );
+  if (cachedCoordinates) {
+    // console.log("cachedCoordinates:", cachedCoordinates);
+
+    const { lat, lon, cityName } = JSON.parse(cachedCoordinates);
+    await getWeatherData(lat, lon, cityName);
+  }
+  const coordinates = await getLatLonByCity(sanitizedCity);
+  if (coordinates) {
+    const { lat, lon, cityName } = coordinates;
+    localStorage.setItem(
+      `cityCoordinates_${cityName}`,
+      JSON.stringify(coordinates)
+    );
+    await getWeatherData(lat, lon, cityName);
   }
 }
 
@@ -109,12 +117,16 @@ async function getLatLonByCity(city: string) {
     // Reverse geocoding to get the correct city name
     const reverseGeocodeUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`;
     const reverseGeocodeResponse = await fetch(reverseGeocodeUrl);
-    if (!reverseGeocodeResponse.ok) throw new Error("Failed to get city name. Please try again later.");
+    if (!reverseGeocodeResponse.ok)
+      throw new Error("Failed to get city name. Please try again later.");
     const reverseGeocodeData = await reverseGeocodeResponse.json();
     const correctCityName = reverseGeocodeData[0].name;
     // console.log('correctCityName:',correctCityName);
 
-    localStorage.setItem(`cityCoordinates_${correctCityName}`, JSON.stringify({ lat, lon }));
+    localStorage.setItem(
+      `cityCoordinates_${correctCityName}`,
+      JSON.stringify({ lat, lon })
+    );
     return { lat, lon, cityName: correctCityName };
   } catch (error: any) {
     console.error(error.message);
@@ -140,7 +152,8 @@ async function getWeatherData(lat: string, lon: string, city: string) {
       displayWeatherData(JSON.parse(cachedWeather), city);
     } else {
       const response = await fetch(url);
-      if (!response.ok) throw new Error("Weather data not found. Please try again later.");
+      if (!response.ok)
+        throw new Error("Weather data not found. Please try again later.");
       const data = await response.json();
       console.log(data);
       localStorage.setItem(`weatherData_${city}`, JSON.stringify(data));
